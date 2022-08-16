@@ -9,6 +9,6 @@ import resolvers from './resolvers';
 const typeDefs: any = gql`
   ${fs.readFileSync(__dirname.concat('/schema.graphql'), 'utf8')}
 `;
-const schema = makeExecutableSchema({ typeDefs, resolvers });
+const schema: GraphQLSchema = makeExecutableSchema({ typeDefs, resolvers });
 
 export default schema;

@@ -14,41 +14,21 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const apollo_server_express_1 = require("apollo-server-express");
-const PORT = 8080;
-const app = (0, express_1.default)();
-app.get('/', (req, res) => {
-    res.send('Express is successfully running!');
-});
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
-const typeDefs = (0, apollo_server_express_1.gql) `
-  type Query {
-    message: String!
-  }
-`;
-const reslovers = {
-    Query: {
-        message: () => 'It works!',
-    },
-};
-const config = {
-    typeDefs: typeDefs,
-    resolvers: reslovers,
-};
-function startApolloServer(config) {
+const schema_1 = __importDefault(require("./graphql/schema"));
+function startApolloServer() {
     return __awaiter(this, void 0, void 0, function* () {
         const PORT = 8080;
         const app = (0, express_1.default)();
-        const server = new apollo_server_express_1.ApolloServer(config);
+        const server = new apollo_server_express_1.ApolloServer({ schema: schema_1.default, mocks: true });
         yield server.start();
         server.applyMiddleware({
             app,
             path: '/graphql',
         });
         app.listen(PORT, () => {
-            console.log(`Server is running on port ${PORT}`);
+            console.log(`Server is running at
+                          http:localhost:${PORT}`);
         });
     });
 }
-startApolloServer(config);
+startApolloServer();

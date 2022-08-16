@@ -1,6 +1,6 @@
 type Query {
   message: String!
-  getUser(userId: ID!): user
+  getUser(userId: ID!): User
   getPostsByUserId(userId: ID!, offset: Int, limit: Int): [Post]
   getFeed(offset: Int, limit: Int): [Post]
   getNotificationsByUserId(userId: ID!, offset: Int, limit: Int): [Notification]
