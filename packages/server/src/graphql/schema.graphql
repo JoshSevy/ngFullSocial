@@ -41,13 +41,14 @@ type Post {
   likesCount: Int!
   likedByAuthUser: Boolean
   latestComment: Comment
+  latestLike: String
   createdAt: String!
 }
 
 type Comment {
   id: ID!
-  Comment: String!
-  Author: ID!
+  comment: String!
+  author: ID!
   post: ID!
   createAt: String!
 }

@@ -16,9 +16,15 @@ const express_1 = __importDefault(require("express"));
 const apollo_server_express_1 = require("apollo-server-express");
 const schema_1 = __importDefault(require("./graphql/schema"));
 const casual_1 = __importDefault(require("casual"));
+let postsIds = [];
+let usersIds = [];
 const mocks = {
     User: () => ({
-        id: casual_1.default.uuid,
+        id: () => {
+            let uuid = casual_1.default.uuid;
+            usersIds.push(uuid);
+            return uuid;
+        },
         fullName: casual_1.default.full_name,
         bio: casual_1.default.text,
         email: casual_1.default.email,
@@ -29,7 +35,12 @@ const mocks = {
         postsCount: () => casual_1.default.integer(0),
     }),
     Post: () => ({
-        id: casual_1.default.uuid,
+        id: () => {
+            let uuid = casual_1.default.uuid;
+            postsIds.push(uuid);
+            return uuid;
+        },
+        author: casual_1.default.random_element(usersIds),
         text: casual_1.default.text,
         image: 'https://picsum.photos/seed/picsum/200/300',
         commentsCount: () => casual_1.default.integer(0),
@@ -39,13 +50,15 @@ const mocks = {
     }),
     Comment: () => ({
         id: casual_1.default.uuid,
+        author: casual_1.default.random_element(usersIds),
         comment: casual_1.default.text,
-        post: casual_1.default.uuid,
+        post: casual_1.default.random_element(postsIds),
         createAt: () => casual_1.default.date(),
     }),
     Like: () => ({
         id: casual_1.default.uuid,
-        user: casual_1.default.uuid,
+        user: casual_1.default.random_element(usersIds),
+        post: casual_1.default.random_element(postsIds),
     }),
     Query: () => ({
         getPostsByUserId: () => [...new Array(casual_1.default.integer(10, 100))],
