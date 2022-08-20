@@ -3,9 +3,16 @@ import { ApolloServer } from 'apollo-server-express';
 import schema from './graphql/schema';
 import casual from 'casual';
 
+let postsIds: string[] = [];
+let usersIds: string[] = [];
+
 const mocks = {
   User: () => ({
-    id: casual.uuid,
+    id: () => {
+      let uuid = casual.uuid;
+      usersIds.push(uuid);
+      return uuid;
+    },
     fullName: casual.full_name,
     bio: casual.text,
     email: casual.email,
@@ -16,7 +23,12 @@ const mocks = {
     postsCount: () => casual.integer(0),
   }),
   Post: () => ({
-    id: casual.uuid,
+    id: () => {
+      let uuid = casual.uuid;
+      postsIds.push(uuid);
+      return uuid;
+    },
+    author: casual.random_element(usersIds),
     text: casual.text,
     image: 'https://picsum.photos/seed/picsum/200/300',
     commentsCount: () => casual.integer(0),
@@ -26,13 +38,15 @@ const mocks = {
   }),
   Comment: () => ({
     id: casual.uuid,
+    author: casual.random_element(usersIds),
     comment: casual.text,
-    post: casual.uuid,
+    post: casual.random_element(postsIds),
     createAt: () => casual.date(),
   }),
   Like: () => ({
     id: casual.uuid,
-    user: casual.uuid,
+    user: casual.random_element(usersIds),
+    post: casual.random_element(postsIds),
   }),
   Query: () => ({
     getPostsByUserId: () => [...new Array(casual.integer(10, 100))],
