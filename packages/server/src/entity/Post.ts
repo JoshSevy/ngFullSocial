@@ -1,4 +1,17 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  OneToOne,
+  OneToMany,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
+
+import { Comment } from './Comment';
+import { Like } from './Like';
+import { User } from './User';
 
 @Entity()
 export class Post {
@@ -18,4 +31,13 @@ export class Post {
   createdAt: Date;
   @Column({ default: false })
   likedByAuthUser: boolean;
+  @OneToOne((type) => Comment, (comment) => comment.post, { onDelete: 'SET NULL' })
+  @JoinColumn()
+  latestComment: Comment;
+  @ManyToOne((type) => User, (user) => user.posts, { onDelete: 'CASCADE' })
+  author: User;
+  @OneToMany((type) => Comment, (comment) => comment.post)
+  comments: Comment[];
+  @OneToMany((type) => Like, (like) => like.post)
+  likes: Like[];
 }
