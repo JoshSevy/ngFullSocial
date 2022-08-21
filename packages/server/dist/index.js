@@ -16,6 +16,9 @@ const express_1 = __importDefault(require("express"));
 const apollo_server_express_1 = require("apollo-server-express");
 const schema_1 = __importDefault(require("./graphql/schema"));
 const casual_1 = __importDefault(require("casual"));
+const cors_1 = __importDefault(require("cors"));
+require("reflect-metadata");
+const typeorm_1 = require("typeorm");
 let postsIds = [];
 let usersIds = [];
 const mocks = {
@@ -73,7 +76,8 @@ function startApolloServer() {
     return __awaiter(this, void 0, void 0, function* () {
         const PORT = 8080;
         const app = (0, express_1.default)();
-        const server = new apollo_server_express_1.ApolloServer({ schema: schema_1.default, mocks, mockEntireSchema: false });
+        app.use((0, cors_1.default)());
+        const server = new apollo_server_express_1.ApolloServer({ schema: schema_1.default });
         yield server.start();
         server.applyMiddleware({
             app,
@@ -85,4 +89,9 @@ function startApolloServer() {
         });
     });
 }
-startApolloServer();
+const connection = (0, typeorm_1.createConnection)();
+connection
+    .then(() => {
+    startApolloServer();
+})
+    .catch((error) => console.log('Database connection error: ', error));
