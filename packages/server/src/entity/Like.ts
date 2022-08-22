@@ -1,7 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne } from 'typeorm';
+import { AfterInsert, Entity, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne } from 'typeorm';
 
 import { Post } from './Post';
 import { User } from './User';
+import { Notification } from './Notification';
+
+import { AppDataSource } from '..';
 
 @Entity('likes')
 export class Like {
@@ -13,4 +16,19 @@ export class Like {
   user: User;
   @ManyToOne((type) => Post, (post) => post.likes, { onDelete: 'CASCADE' })
   post: Post;
+  @AfterInsert()
+  async createNotification() {
+    if (this.post && this.post.id) {
+      const notificationRepository = AppDataSource.getRepository(Notification);
+      const notification = notificationRepository.create();
+      notification.user = (await AppDataSource.getRepository(User)
+        .createQueryBuilder('user')
+        .innerJoinAndSelect('user.posts', 'post')
+        .where('post.id = :id', { id: this.post?.id })
+        .getOne()) as User;
+      notification.postId = this.post?.id;
+      notification.text = `${this.user.fullName} liked your post`;
+      await notificationRepository.save(notification);
+    }
+  }
 }
