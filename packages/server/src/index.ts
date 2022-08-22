@@ -1,69 +1,60 @@
 import express, { Application } from 'express';
 import { ApolloServer } from 'apollo-server-express';
 import schema from './graphql/schema';
-import casual from 'casual';
 import cors from 'cors';
+import 'reflect-metadata';
+import { DataSource, Repository, getRepository } from 'typeorm';
+import { User, Post, Comment, Like, Notification } from './entity';
 
-let postsIds: string[] = [];
-let usersIds: string[] = [];
+export const AppDataSource: DataSource = new DataSource({
+  type: 'mysql',
+  host: 'localhost',
+  port: 3306,
+  username: 'dbuser',
+  password: 'p4ssw0rd',
+  database: 'socialdb',
+  synchronize: true,
+  logging: true,
+  entities: ['src/entity/**/*.ts'],
+  migrations: ['src/migration/**/*.ts'],
+  subscribers: ['src/subscriber/**/*.ts'],
+});
 
-const mocks = {
-  User: () => ({
-    id: () => {
-      let uuid = casual.uuid;
-      usersIds.push(uuid);
-      return uuid;
-    },
-    fullName: casual.full_name,
-    bio: casual.text,
-    email: casual.email,
-    username: casual.username,
-    password: casual.password,
-    image: 'https://picsum.photos/seed/picsum/200/300',
-    coverImage: 'https://picsum.photos/seed/picsum/200/300',
-    postsCount: () => casual.integer(0),
-  }),
-  Post: () => ({
-    id: () => {
-      let uuid = casual.uuid;
-      postsIds.push(uuid);
-      return uuid;
-    },
-    author: casual.random_element(usersIds),
-    text: casual.text,
-    image: 'https://picsum.photos/seed/picsum/200/300',
-    commentsCount: () => casual.integer(0),
-    likesCount: () => casual.integer(0),
-    latestLike: casual.first_name,
-    createdAt: () => casual.date(),
-  }),
-  Comment: () => ({
-    id: casual.uuid,
-    author: casual.random_element(usersIds),
-    comment: casual.text,
-    post: casual.random_element(postsIds),
-    createAt: () => casual.date(),
-  }),
-  Like: () => ({
-    id: casual.uuid,
-    user: casual.random_element(usersIds),
-    post: casual.random_element(postsIds),
-  }),
-  Query: () => ({
-    getPostsByUserId: () => [...new Array(casual.integer(10, 100))],
-    getFeed: () => [...new Array(casual.integer(10, 100))],
-    getNotificationsByUserId: () => [...new Array(casual.integer(10, 100))],
-    getCommentsByPostId: () => [...new Array(casual.integer(10, 100))],
-    getLikesByPostId: () => [...new Array(casual.integer(10, 100))],
-    searchUsers: () => [...new Array(casual.integer(10, 100))],
-  }),
+export type Context = {
+  orm: {
+    userRepository: Repository<User>;
+    postRepository: Repository<Post>;
+    commentRepository: Repository<Comment>;
+    likeRepository: Repository<Like>;
+    notificationRepository: Repository<Notification>;
+  };
 };
+
+AppDataSource.initialize()
+  .then(() => {
+    startApolloServer();
+  })
+  .catch((error) => console.log('Database connection error: ', error));
 
 async function startApolloServer() {
   const PORT = 8080;
   const app: Application = express();
   app.use(cors());
-  const server: ApolloServer = new ApolloServer({ schema, mocks, mockEntireSchema: false });
+  const userRepository: Repository<User> = AppDataSource.getRepository(User);
+  const postRepository: Repository<Post> = AppDataSource.getRepository(Post);
+  const commentRepository: Repository<Comment> = AppDataSource.getRepository(Comment);
+  const likeRepository: Repository<Like> = AppDataSource.getRepository(Like);
+  const notificationRepository: Repository<Notification> = AppDataSource.getRepository(Notification);
+  const context: Context = {
+    orm: {
+      userRepository,
+      postRepository,
+      commentRepository,
+      likeRepository,
+      notificationRepository,
+    },
+  };
+  const server: ApolloServer = new ApolloServer({ schema, context });
   await server.start();
   server.applyMiddleware({
     app,
@@ -75,5 +66,3 @@ async function startApolloServer() {
                           http:localhost:${PORT}`);
   });
 }
-
-startApolloServer();
