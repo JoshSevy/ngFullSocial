@@ -12,6 +12,7 @@
   "author": "Joshua Sevy",
   "license": "MIT",
   "dependencies": {
+    "casual": "^1.6.2",
     "express": "^4.18.2"
   },
   "devDependencies": {
