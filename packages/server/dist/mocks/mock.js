@@ -5,8 +5,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.mockData = void 0;
 const casual_1 = __importDefault(require("casual"));
+let postsIds = [];
+let usersIds = [];
 const User = () => ({
-    id: casual_1.default.uuid,
+    id: () => {
+        let uuid = casual_1.default.uuid;
+        usersIds.push(uuid);
+        return uuid;
+    },
     fullName: casual_1.default.full_name,
     bio: casual_1.default.text,
     email: casual_1.default.email,
@@ -17,7 +23,12 @@ const User = () => ({
     postsCount: () => casual_1.default.integer(0),
 });
 const Post = () => ({
-    id: casual_1.default.uuid,
+    id: () => {
+        let uuid = casual_1.default.uuid;
+        postsIds.push(uuid);
+        return uuid;
+    },
+    author: casual_1.default.random_element(usersIds),
     text: casual_1.default.text,
     image: 'https://picsum.photos/seed/picsum/200/300',
     commentsCount: () => casual_1.default.integer(0),
@@ -27,12 +38,14 @@ const Post = () => ({
 });
 const Comment = () => ({
     id: casual_1.default.uuid,
+    author: casual_1.default.random_element(usersIds),
     comment: casual_1.default.text,
     post: casual_1.default.uuid,
     createdAt: () => casual_1.default.date(),
 });
 const Like = () => ({
     id: casual_1.default.uuid,
+    user: casual_1.default.random_element(usersIds),
     post: casual_1.default.uuid,
 });
 const Query = () => ({
